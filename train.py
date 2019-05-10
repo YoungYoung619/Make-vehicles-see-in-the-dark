@@ -24,13 +24,13 @@ tf.app.flags.DEFINE_string(
     'The path to a checkpoint from which to fine-tune.')
 
 tf.app.flags.DEFINE_string(
-    'train_dir', './checkpoint/',
+    'train_dir', './checkpoint',
     'Directory where checkpoints are written to.')
 
 tf.app.flags.DEFINE_float('learning_rate', 1e-2, 'Initial learning rate.')
 
 tf.app.flags.DEFINE_integer(
-    'batch_size', 30, 'The number of samples in each batch.')
+    'batch_size', 10, 'The number of samples in each batch.')
 
 tf.app.flags.DEFINE_integer(
     'f_log_step', 5,
@@ -49,8 +49,10 @@ FLAGS = tf.app.flags.FLAGS
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-input = tf.placeholder(shape=[None, 139, 209, 3], dtype=tf.float32)
-groundtruth = tf.placeholder(shape=[None, 139, 209, 3], dtype=tf.float32)
+input = tf.placeholder(shape=[None, 139*2, 209*2, 3], dtype=tf.float32)
+groundtruth = tf.placeholder(shape=[None, 139*2, 209*2, 3], dtype=tf.float32)
+# input = tf.placeholder(shape=[None, 256, 256, 3], dtype=tf.float32)
+# groundtruth = tf.placeholder(shape=[None, 256, 256, 3], dtype=tf.float32)
 global_step = tf.Variable(0, trainable=False, name='global_step')
 
 lr = tf.placeholder(dtype=tf.float32)
@@ -117,7 +119,7 @@ def main(_):
             elif current_step<40000:
                 learning_rate = FLAGS.learning_rate / 10.
             else:
-                learning_rate = FLAGS.learning_rate / 100.
+                learning_rate = FLAGS.learning_rate / 10.
 
             gt_imgs, train_imgs = pd.load_batch()
 
@@ -144,18 +146,18 @@ def main(_):
                     saver.save(sess, model_name)
                     logger.info('Save model sucess...')
 
-            if FLAGS.f_eval_step != None:
-                if current_step % FLAGS.f_eval_step == FLAGS.f_eval_step - 1:
-                    files = glob.glob('./dark/*.jpg')
-                    for file in files:
-                        img = io.imread(file)
-                        img = cv2.resize(img, dsize=(209, 139))
-                        img = img*2./255. - 1.
-                        out = sess.run(output, feed_dict={input:np.array([img])})
-                        img = np.uint8((out[0]+1.)*255/2)
-
-                        file_name = os.path.basename(file).split('.')[0] + '_' +str(current_step) +'.jpg'
-                        io.imsave('./eval/%s'%(file_name), img)
+            # if FLAGS.f_eval_step != None:
+            #     if current_step % FLAGS.f_eval_step == FLAGS.f_eval_step - 1:
+            #         files = glob.glob('./dark/*.jpg')
+            #         for file in files:
+            #             img = io.imread(file)
+            #             img = cv2.resize(img, dsize=(209, 139))
+            #             img = img*2./255. - 1.
+            #             out = sess.run(output, feed_dict={input:np.array([img])})
+            #             img = np.uint8((out[0]+1.)*255/2)
+            #
+            #             file_name = os.path.basename(file).split('.')[0] + '_' +str(current_step) +'.jpg'
+            #             io.imsave('./eval/%s'%(file_name), img)
 
 
 if __name__ == '__main__':
