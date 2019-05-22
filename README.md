@@ -11,5 +11,5 @@ Here are some comparison when the model was applied in extreme dark scene and re
 ### Extreme dark scene enhance
 <div align=left><img src="pictures/compare.png"></div>
 ### Real night scene enhance
-<div align=left><img src="pictures/real_night_disp.png"></div>
-<div align=left><img src="pictures/real_night_details.png"></div>
+<div align=left><img width="600" height="420" src="pictures/real_night_disp.png"></div>
+<div align=left><img width="500" height="526" src="pictures/real_night_details.png"></div>
