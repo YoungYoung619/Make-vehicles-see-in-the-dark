@@ -14,3 +14,24 @@ In our expeiment, our method has the PSNR/SSMI with 26.70/0.93. Here are some co
 ### Real night scene enhance
 <div align=left><img width="500" height="350" src="pictures/real_night_disp.png"></div>
 <div align=left><img width="400" height="420" src="pictures/real_night_details.png"></div>
+
+## How to use code
+### 1. Download the dataset
+to do
+### 2. Training
+Below script gives you an example of training a model with our models.
+```
+python train.py --batch_size=10 --learning_rate=1e-3 --f_log_step=20 --f_summary_step=20 --f_save_step=2000
+```
+### 3. Prediction
+Below script gives you an example of training a model with our models.
+```
+CHECKPOINT_DIR_NAME: something like /usr/my_dir/checkpoint
+python predict.py --checkpoint_dir=CHECKPOINT_DIR_NAME
+```
+### 4. Evaluation
+Below script gives you an example of training a model with our models.
+```
+CHECKPOINT_DIR_NAME: something like /usr/my_dir/checkpoint
+python eval.py --checkpoint_dir=CHECKPOINT_DIR_NAME
+```
