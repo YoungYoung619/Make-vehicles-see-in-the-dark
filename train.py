@@ -11,13 +11,10 @@ import tensorflow as tf
 import numpy as np
 import logging
 import os
-import glob
 
 from net.u_net import u_net
 from dataset.bdd_daytime import bdd_daytime
 
-from skimage import io
-import cv2
 
 tf.app.flags.DEFINE_string(
     'checkpoint_dir', './checkpoint',
@@ -30,7 +27,7 @@ tf.app.flags.DEFINE_string(
 tf.app.flags.DEFINE_float('learning_rate', 1e-2, 'Initial learning rate.')
 
 tf.app.flags.DEFINE_integer(
-    'batch_size', 10, 'The number of samples in each batch.')
+    'batch_size', 8, 'The number of samples in each batch.')
 
 tf.app.flags.DEFINE_integer(
     'f_log_step', 5,
@@ -49,10 +46,9 @@ FLAGS = tf.app.flags.FLAGS
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-input = tf.placeholder(shape=[None, 139*2, 209*2, 3], dtype=tf.float32)
-groundtruth = tf.placeholder(shape=[None, 139*2, 209*2, 3], dtype=tf.float32)
-# input = tf.placeholder(shape=[None, 256, 256, 3], dtype=tf.float32)
-# groundtruth = tf.placeholder(shape=[None, 256, 256, 3], dtype=tf.float32)
+input = tf.placeholder(shape=[None, 278, 418, 3], dtype=tf.float32)
+groundtruth = tf.placeholder(shape=[None, 278, 418, 3], dtype=tf.float32)
+
 global_step = tf.Variable(0, trainable=False, name='global_step')
 
 lr = tf.placeholder(dtype=tf.float32)
@@ -73,19 +69,41 @@ def _smooth_l1(x):
 def build_graph(input):
     output = u_net(input, is_training=True)
 
-    loss = tf.reduce_sum(_smooth_l1(output - groundtruth)) / FLAGS.batch_size
+    ## loss_1
+    mse_loss = tf.reduce_sum(_smooth_l1(output - groundtruth)) / FLAGS.batch_size
+
+    output = (output + 1.) * 255. / 2.
+    gt_img = (groundtruth + 1.) * 255. / 2.
+
+    psnr = tf.image.psnr(output, gt_img, max_val=255.)
+    psnr_loss = tf.reduce_sum(1 / (psnr + 1e-8))
+
+    ssmi_loss = tf.image.ssim_multiscale(output, gt_img, max_val=255.)
+    ssmi_loss = tf.maximum(ssmi_loss, 1e-8)
+    ssmi_loss = tf.reduce_sum(-tf.log(ssmi_loss))
+
+    # LOSS_MSE #
+    loss_1 = mse_loss
+
+    # LOSS_SSMI_MSE #
+    loss_2 = ssmi_loss*10000 + mse_loss
+
+    # LOSS_SSMI_PSNR RECOMMEND#
+    loss_3 = 1000*(ssmi_loss + psnr) ##
+
+
 
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
         optimizer = tf.train.AdamOptimizer(learning_rate=lr)
 
-        grads_and_vars = optimizer.compute_gradients(loss)
+        grads_and_vars = optimizer.compute_gradients(loss_3)
         ## clip the gradients ##
         capped_gvs = [(tf.clip_by_value(grad, -5., 5.), var)
                       for grad, var in grads_and_vars]
         train_op = optimizer.apply_gradients(capped_gvs, global_step=global_step)
 
-    return output, loss, train_op
+    return output, loss_3, train_op
 
 def main(_):
     output, loss, train_op = build_graph(input)
@@ -113,7 +131,7 @@ def main(_):
 
         avg_loss = 0.
         current_step  = sess.run(global_step)
-        while current_step < 80000:
+        while current_step < 800000:
             if current_step<20000:
                 learning_rate = FLAGS.learning_rate
             elif current_step<40000:
@@ -145,19 +163,6 @@ def main(_):
                     model_name = os.path.join(FLAGS.train_dir, 'dark_aug.model')
                     saver.save(sess, model_name)
                     logger.info('Save model sucess...')
-
-            # if FLAGS.f_eval_step != None:
-            #     if current_step % FLAGS.f_eval_step == FLAGS.f_eval_step - 1:
-            #         files = glob.glob('./dark/*.jpg')
-            #         for file in files:
-            #             img = io.imread(file)
-            #             img = cv2.resize(img, dsize=(209, 139))
-            #             img = img*2./255. - 1.
-            #             out = sess.run(output, feed_dict={input:np.array([img])})
-            #             img = np.uint8((out[0]+1.)*255/2)
-            #
-            #             file_name = os.path.basename(file).split('.')[0] + '_' +str(current_step) +'.jpg'
-            #             io.imsave('./eval/%s'%(file_name), img)
 
 
 if __name__ == '__main__':
