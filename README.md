@@ -4,4 +4,4 @@ Images of road scene in low-illumination environment are often loss the details 
 
 ## Methodology
 Our model was inspired by U-net, we used some 1x1 conv to replace 3x3 conv which make it more efficient. Besides, we add (["group normalization"](https://arxiv.org/abs/1803.08494)) in each layer before activation function. During training, we randomly add gaussian blur, gaussian noise to enhance the generalization performance of the model.
-<div align=center><img width="720" height="300" src="pictures/net_structure.png"></div>
+<div align=center><img width="600" height="212" src="pictures/net_structure.png"></div>
