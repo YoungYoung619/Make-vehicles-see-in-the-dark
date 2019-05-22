@@ -31,13 +31,13 @@ Below script gives you an example of training a model with our models.
 python train.py --batch_size=10 --learning_rate=1e-3 --f_log_step=20 --f_summary_step=20 --f_save_step=2000
 ```
 ### 3. Prediction
-Below script gives you an example of training a model with our models.
+Below script gives you an example of visualing the results after training a model.
 ```
 CHECKPOINT_DIR_NAME: something like /usr/my_dir/checkpoint
 python predict.py --checkpoint_dir=CHECKPOINT_DIR_NAME
 ```
 ### 4. Evaluation
-Below script gives you an example of training a model with our models.
+Below script gives you an example to evaluate the model after training.
 ```
 CHECKPOINT_DIR_NAME: something like /usr/my_dir/checkpoint
 python eval.py --checkpoint_dir=CHECKPOINT_DIR_NAME
