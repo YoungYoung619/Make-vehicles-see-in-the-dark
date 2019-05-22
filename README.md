@@ -20,7 +20,8 @@ In our expeiment, our method has the PSNR/SSMI with 26.70/0.93. Here are some co
 ```
 tensorflow >= 1.6.0
 imgaug ==0.2.8
-opencv-python == 3.3.1.11
+opencv-python >= 3.3.1.11
+scikit-image >=0.15.0
 ```
 ### 1. Download the dataset
 to do
