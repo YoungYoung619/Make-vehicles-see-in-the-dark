@@ -7,7 +7,7 @@ Our model was inspired by U-net, we used some 1x1 conv to replace 3x3 conv which
 <div align=center><img width="500" height="176" src="pictures/net_structure.png"></div>
 
 ## Comparison Example
-In our expeiment, our method has the PSNR/SSMI with 26.70/0.93. Here are some comparison when the model was applied in extreme dark scene and real night scene.
+In our expeiment, our method has the PSNR/SSMI with 26.70/0.93. Here are some comparison when different algorithms was applied in extreme dark scene and real night scene.
 ### Extreme dark scene enhance
 <div align=left><img src="pictures/compare.png"></div>
 
