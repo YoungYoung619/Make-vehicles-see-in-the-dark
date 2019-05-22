@@ -16,6 +16,12 @@ In our expeiment, our method has the PSNR/SSMI with 26.70/0.93. Here are some co
 <div align=left><img width="400" height="420" src="pictures/real_night_details.png"></div>
 
 ## How to use code
+### Requirement
+```
+tensorflow >= 1.6.0
+imgaug ==0.2.8
+opencv-python == 3.3.1.11
+```
 ### 1. Download the dataset
 to do
 ### 2. Training
