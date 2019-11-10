@@ -156,26 +156,26 @@ def backbone_lite(inputs, is_training):
     endPoints = collections.OrderedDict()
     exp = 6  # expansion ratio
     with tf.variable_scope('mobilenetv2'):
-        net = conv2d_block(inputs, 32, 3, 2, is_training, name='conv1_1')  # size/2
+        net = conv2d_block(inputs, 32, 3, 1, is_training, name='conv1_1')  # size
         endPoints['conv_1'] = net
 
         net = res_block(net, 1, 16, 1, is_training, name='res2_1')
-        net = res_block(net, exp, 24, 2, is_training, name='res3_1')  # size/4
+        net = res_block(net, exp, 24, 2, is_training, name='res3_1')  # size/2
         net = res_block(net, exp, 24, 1, is_training, name='res3_2')
         endPoints['conv_2'] = net
 
-        net = res_block(net, exp, 32, 2, is_training, name='res4_1')  # size/8
+        net = res_block(net, exp, 32, 2, is_training, name='res4_1')  # size/4
         net = res_block(net, exp, 32, 1, is_training, name='res4_2')
         net = res_block(net, exp, 32, 1, is_training, name='res4_3')
         endPoints['conv_3'] = net
 
-        net = res_block(net, exp, 64, 2, is_training, name='res5_1')  # size/16
+        net = res_block(net, exp, 64, 2, is_training, name='res5_1')  # size/8
         net = res_block(net, exp, 64, 1, is_training, name='res5_2')
         net = res_block(net, exp, 64, 1, is_training, name='res5_3')
         net = res_block(net, exp, 64, 1, is_training, name='res5_4')
         endPoints['conv_4'] = net
 
-        net = res_block(net, exp, 96, 1, is_training, name='res6_1')
+        net = res_block(net, exp, 96, 2, is_training, name='res6_1')
         net = res_block(net, exp, 96, 1, is_training, name='res6_2')
         net = res_block(net, exp, 96, 1, is_training, name='res6_3')
         endPoints['conv_5'] = net
