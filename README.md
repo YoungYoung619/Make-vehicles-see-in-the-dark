@@ -20,7 +20,7 @@ opencv-python >= 3.3.1.11
 scikit-image >=0.15.0
 ```
 ### 1. Download the dataset
-Please download the corresponding dataset from the official, and extract the image in daytime in a specific directory, and then set the directory in dataset/bdd_daytime.py
+Please download the corresponding dataset from the official, and extract the daytime images (both training and test dir) in a specific directory, and then set the directory in dataset/bdd_daytime.py
 ### 2. Training
 Below script gives you an example of training a model with our models.
 ```
