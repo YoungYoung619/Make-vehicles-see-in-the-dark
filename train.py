@@ -13,32 +13,46 @@ import logging
 import os
 
 from net.u_net import u_net
+from net.fpn_net import fpn_net
+from net.fpn_net_lite import fpn_net_lite
 from dataset.bdd_daytime import bdd_daytime
 
 
 tf.app.flags.DEFINE_string(
-    'checkpoint_dir', './checkpoint',
+    'checkpoint_dir', '',
     'The path to a checkpoint from which to fine-tune.')
 
 tf.app.flags.DEFINE_string(
-    'train_dir', './checkpoint',
+    'train_dir', './checkpoint/fpn_lite',
     'Directory where checkpoints are written to.')
 
-tf.app.flags.DEFINE_float('learning_rate', 1e-2, 'Initial learning rate.')
+tf.app.flags.DEFINE_string(
+    'summary_dir', './summary/fpn_lite',
+    'Directory where checkpoints are written to.')
+
+tf.app.flags.DEFINE_float('learning_rate', 1e-3, 'Initial learning rate.')
 
 tf.app.flags.DEFINE_integer(
-    'batch_size', 8, 'The number of samples in each batch.')
+    'batch_size', 6, 'The number of samples in each batch.')
 
 tf.app.flags.DEFINE_integer(
-    'f_log_step', 5,
+    'f_log_step', 20,
     'The frequency with which logs are print.')
 
 tf.app.flags.DEFINE_integer(
-    'f_save_step', 1000,
+    'f_summary_step', 20,
+    'The frequency with which the model is saved, in step.')
+
+tf.app.flags.DEFINE_integer(
+    'f_save_step', 9999,
     'The frequency with which summaries are saved, in step.')
 
 tf.app.flags.DEFINE_integer(
     'f_eval_step', 20,
+    'The frequency with which summaries are saved, in step.')
+
+tf.app.flags.DEFINE_integer(
+    'max_step', 50000,
     'The frequency with which summaries are saved, in step.')
 
 FLAGS = tf.app.flags.FLAGS
@@ -67,7 +81,14 @@ def _smooth_l1(x):
     return r
 
 def build_graph(input):
-    output = u_net(input, is_training=True)
+    output, attention_pairs, attentions = fpn_net_lite(input, is_training=True)
+
+    attention_decay = 5e-2
+    attention_regularization = 0.
+    for attention_pair in attention_pairs:
+        attention_regularization += tf.reduce_mean(_smooth_l1(attention_pair[0] - attention_pair[1]))
+
+    tf.summary.scalar('attention_regularization', attention_regularization)
 
     ## loss_1
     mse_loss = tf.reduce_sum(_smooth_l1(output - groundtruth)) / FLAGS.batch_size
@@ -89,9 +110,9 @@ def build_graph(input):
     loss_2 = ssmi_loss*10000 + mse_loss
 
     # LOSS_SSMI_PSNR RECOMMEND#
-    loss_3 = 1000*(ssmi_loss + psnr) ##
+    loss_3 = ssmi_loss + psnr_loss + attention_decay*attention_regularization##
 
-
+    tf.summary.scalar('total_loss', loss_3)
 
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
@@ -111,14 +132,19 @@ def main(_):
     logger.info('Total trainable parameters:%s'%(str(np.sum([np.prod(v.get_shape().as_list()) \
                                                              for v in tf.trainable_variables()]))))
 
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(max_to_keep=5)
 
     ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
     init = tf.global_variables_initializer()
+    merge_ops = tf.summary.merge_all()
 
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     with tf.Session(config=config) as sess:
+        ## create a summary writer ##
+        summary_dir = os.path.join(FLAGS.summary_dir)
+        writer = tf.summary.FileWriter(FLAGS.summary_dir, sess.graph)
+
         pd = bdd_daytime(batch_size=FLAGS.batch_size, for_what='train', shuffle=True)
 
         if ckpt:
@@ -131,17 +157,17 @@ def main(_):
 
         avg_loss = 0.
         current_step  = sess.run(global_step)
-        while current_step < 800000:
-            if current_step<20000:
+        while current_step < FLAGS.max_step:
+            if current_step<FLAGS.max_step//3:
                 learning_rate = FLAGS.learning_rate
-            elif current_step<40000:
+            elif current_step<FLAGS.max_step*2//3:
                 learning_rate = FLAGS.learning_rate / 10.
             else:
                 learning_rate = FLAGS.learning_rate / 10.
 
             gt_imgs, train_imgs = pd.load_batch()
 
-            update_op, l, current_step = sess.run([train_op, loss, global_step],
+            update_op, m_ops, l, current_step = sess.run([train_op, merge_ops, loss, global_step],
                                                   feed_dict={input:train_imgs,
                                                              groundtruth:gt_imgs,
                                                              lr:learning_rate})
@@ -156,13 +182,24 @@ def main(_):
                     logger.info('Step%s loss:%s' % (str(current_step), str(avg_loss)))
                     avg_loss = 0.
 
+            if FLAGS.f_summary_step != None:
+                if current_step % FLAGS.f_summary_step == FLAGS.f_summary_step - 1:
+                    ## summary ##
+                    writer.add_summary(m_ops, current_step)
+
+
             if FLAGS.f_save_step != None:
                 if current_step % FLAGS.f_save_step == FLAGS.f_save_step - 1:
                     ## save model ##
                     logger.info('Saving model...')
                     model_name = os.path.join(FLAGS.train_dir, 'dark_aug.model')
-                    saver.save(sess, model_name)
+                    saver.save(sess, model_name, global_step=current_step)
                     logger.info('Save model sucess...')
+
+        logger.info('Saving model...')
+        model_name = os.path.join(FLAGS.train_dir, 'dark_aug_final.model')
+        saver.save(sess, model_name, global_step=current_step)
+        logger.info('Save model sucess...')
 
 
 if __name__ == '__main__':
