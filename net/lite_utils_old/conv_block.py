@@ -7,7 +7,7 @@ keep_prob = 1.
 def relu(x, name='relu6'):
     return tf.nn.relu6(x, name)
 
-def group_norm(x, G=16, esp=1e-5):
+def group_norm(x, G=8, esp=1e-5):
     # normalize
     # tranpose: [bs, h, w, c] to [bs, c, h, w] following the paper
     x = tf.transpose(x, [0, 3, 1, 2])
@@ -160,8 +160,8 @@ def backbone_lite(inputs, is_training):
         endPoints['conv_1'] = net
 
         net = res_block(net, 1, 16, 1, is_training, name='res2_1')
-        net = res_block(net, exp, 32, 2, is_training, name='res3_1')  # size/2
-        net = res_block(net, exp, 32, 1, is_training, name='res3_2')
+        net = res_block(net, exp, 24, 2, is_training, name='res3_1')  # size/2
+        net = res_block(net, exp, 24, 1, is_training, name='res3_2')
         endPoints['conv_2'] = net
 
         net = res_block(net, exp, 32, 2, is_training, name='res4_1')  # size/4

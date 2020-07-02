@@ -38,13 +38,13 @@ def fpn_net_lite(input, is_training, norm_type='gn'):  # Unet
     attention_2 = tf.reduce_sum(conv2, axis=-1, keep_dims=True)
 
     attention_3 = tf.reduce_sum(conv3, axis=-1, keep_dims=True)
-    imitation_3_for_2 = tf.image.resize_images(attention_3, size=tuple(attention_2.get_shape().as_list()[1:3]))
+    imitation_3_for_2 = tf.image.resize(attention_3, size=tuple(attention_2.get_shape().as_list()[1:3]))
 
     attention_4 = tf.reduce_sum(conv4, axis=-1, keep_dims=True)
-    imitation_4_for_3 = tf.image.resize_images(attention_4, size=tuple(attention_3.get_shape().as_list()[1:3]))
+    imitation_4_for_3 = tf.image.resize(attention_4, size=tuple(attention_3.get_shape().as_list()[1:3]))
 
     attention_5 = tf.reduce_sum(conv5, axis=-1, keep_dims=True)
-    imitation_5_for_4 = tf.image.resize_images(attention_5, size=tuple(attention_4.get_shape().as_list()[1:3]))
+    imitation_5_for_4 = tf.image.resize(attention_5, size=tuple(attention_4.get_shape().as_list()[1:3]))
 
     ##  FPN
     fpn_channel = 128
@@ -52,28 +52,28 @@ def fpn_net_lite(input, is_training, norm_type='gn'):  # Unet
 
     ## expand the height, width, and combine with the conv4
     f_size = conv4.get_shape().as_list()[1:3]
-    fpn_feat6 = tf.image.resize_images(up5, f_size)
+    fpn_feat6 = tf.image.resize(up5, f_size)
     fpn_conv4 = slim.conv2d(conv4, fpn_channel, [1, 1], rate=1, activation_fn=None, scope='fpn_conv4')
     up6 = fpn_feat6 + fpn_conv4
     up6 = group_norm(up6)
     up6 = lrelu(up6)
 
     f_size = conv3.get_shape().as_list()[1:3]
-    fpn_feat7 = tf.image.resize_images(up6, f_size)
+    fpn_feat7 = tf.image.resize(up6, f_size)
     fpn_conv3 = slim.conv2d(conv3, fpn_channel, [1, 1], rate=1, activation_fn=None, scope='fpn_conv3')
     up7 = fpn_feat7 + fpn_conv3
     up7 = group_norm(up7)
     up7 = lrelu(up7)
 
     f_size = conv2.get_shape().as_list()[1:3]
-    fpn_feat8 = tf.image.resize_images(up7, f_size)
+    fpn_feat8 = tf.image.resize(up7, f_size)
     fpn_conv2 = slim.conv2d(conv2, fpn_channel, [1, 1], rate=1, activation_fn=None, scope='fpn_conv2')
     up8 = fpn_feat8 + fpn_conv2
     up8 = group_norm(up8)
     up8 = lrelu(up8)
 
     f_size = conv1.get_shape().as_list()[1:3]
-    fpn_feat9 = tf.image.resize_images(up8, f_size)
+    fpn_feat9 = tf.image.resize(up8, f_size)
     fpn_conv1 = slim.conv2d(conv1, fpn_channel, [1, 1], rate=1, activation_fn=None, scope='fpn_conv1')
     up9 = fpn_feat9 + fpn_conv1
     up9 = group_norm(up9)
@@ -116,12 +116,7 @@ if __name__ == '__main__':
 
     with tf.Graph().as_default() as graph:
         input = tf.placeholder(shape=[None, 139*2, 209*2, 3], dtype=tf.float32)
-        out = fpn_net_lite(input, is_training=True)
+        out = fpn_net_lite(input, is_training=False)
 
         stats_graph(graph)
-
-    # init = tf.
-    # with tf.Session() as sess:
-
-
     pass

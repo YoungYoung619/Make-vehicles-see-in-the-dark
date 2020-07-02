@@ -131,7 +131,7 @@ def fpn_net(input, is_training, norm_type='gn'):  # Unet
         conv12 = lrelu(conv12)
         conv13 = slim.conv2d(conv12, 3, [1, 1], rate=1, activation_fn=None, scope='g_conv13')
         conv13 = group_norm(conv13)
-        conv13 = tf.tanh(conv13)
+        conv13 = tf.sigmoid(conv13)
 
         attentions = [attention_2, attention_3, attention_4, attention_5]
         self_attention_pairs = [(attention_2, imitation_3_for_2), (attention_3, imitation_4_for_3), (attention_4, imitation_5_for_4)]
