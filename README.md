@@ -8,7 +8,7 @@ Images of road scene in low-illumination environment are often loss the details 
 ![low_illumination_disp1](pictures/europecity.png)
 
 ## Methodology
-The architecture of our proposed light enhancement network (LE-net) was inspired by many advanced technologies, including linear bottleneck and inversed residual, self attention distillation, and feature pyramid module were used to improve the network performance. During training, we randomly add gaussian blur, gaussian noise to enhance the generalization performance of the model. 
+The architecture of our proposed light enhancement network (LE-net) was inspired by many advanced technologies, including linear bottleneck and inversed residual(["mobilenetV2"](https://arxiv.org/abs/1801.04381v2)), self attention distillation(["attention distillation"](https://arxiv.org/abs/1908.00821)), and feature pyramid module(["FPN"](https://arxiv.org/abs/1612.03144)) were used to improve the network performance. During training, we randomly add gaussian blur, gaussian noise to enhance the generalization performance of the model. 
 <div align=center><img width="500" height="176" src="pictures/net_structure.png"></div>
 
 ## How to use code
